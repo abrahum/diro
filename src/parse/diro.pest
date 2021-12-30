@@ -1,0 +1,8 @@
+WHITESPACE = _{ " " }
+main = _{SOI ~ stmt? ~ EOI }
+stmt = _{ expr }
+expr = { dyadic_expr | term }
+dyadic_expr = { term ~ verb ~ expr }
+term = { int | ("(" | "（") ~ expr ~ (")" | "）") }
+verb = {"+" | "-" | "*" | "/" | "^" | "%" | ^"x"}
+int = @{ "-"? ~ ASCII_DIGIT+ }
