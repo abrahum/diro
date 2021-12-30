@@ -1,5 +1,9 @@
 mod parse;
 mod error;
+mod dice;
+
+pub use parse::parse;
+pub use dice::Dice;
 
 #[cfg(test)]
 mod tests {

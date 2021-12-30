@@ -1,6 +1,7 @@
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum DiroAst {
+pub enum DiroAst {
     Int(i32),
+    Dice(crate::Dice),
     DyadicOP {
         verb: Verb,
         lhs: Box<DiroAst>,
@@ -11,7 +12,7 @@ pub(crate) enum DiroAst {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Verb {
+pub enum Verb {
     Plus,   // +
     Minus,  // -
     Times,  // x
@@ -21,7 +22,7 @@ pub(crate) enum Verb {
 }
 
 impl DiroAst {
-    pub fn eval(&self) -> i32 {
+    pub fn eval(&mut self) -> i32 {
         match self {
             DiroAst::Int(i) => *i,
             DiroAst::DyadicOP { verb, lhs, rhs } => match verb {
@@ -32,6 +33,7 @@ impl DiroAst {
                 Verb::Modulo => lhs.eval() % rhs.eval(),
                 Verb::Power => lhs.eval().pow(rhs.eval() as u32),
             },
+            DiroAst::Dice(dice) => dice.roll_and_get(),
             DiroAst::Closed(ast) => ast.eval(),
             DiroAst::Empty => 0,
         }
@@ -43,6 +45,7 @@ impl DiroAst {
             DiroAst::DyadicOP { verb, lhs, rhs } => {
                 format!("({}{}{})", lhs.expr(), verb.expr(), rhs.expr())
             }
+            DiroAst::Dice(dice) => dice.expr(),
             DiroAst::Closed(ast) => ast.expr(),
             DiroAst::Empty => "".to_string(),
         }

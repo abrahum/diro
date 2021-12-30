@@ -4,4 +4,4 @@
 
 ## 相关项目
 
-[OneDiro](https://github.com/OlivOS-Team/onedice): Today, we stand as one. (with some distance 2333)
+[OneDice](https://github.com/OlivOS-Team/onedice): Today, we stand as one. (with some distance 2333)

@@ -10,7 +10,7 @@ use ast::*;
 #[grammar = "parse/diro.pest"]
 struct DiroParser;
 
-pub(crate) fn parse(source: &str) -> DiroResult<DiroAst> {
+pub fn parse(source: &str) -> DiroResult<DiroAst> {
     let pairs = DiroParser::parse(Rule::main, source)?;
     for pair in pairs {
         match pair.as_rule() {
@@ -69,7 +69,7 @@ fn parse_dyadic_expr(pair: Pair<Rule>) -> DiroResult<DiroAst> {
 
 #[test]
 fn parse_test() {
-    let source = "11 + 2 / (2 + 2 - 1)";
-    let ast = parse(source).unwrap();
+    let source = "-11 + 2 / (2 + 2 - 1)";
+    let mut ast = parse(source).unwrap();
     println!("{} = {}", ast.expr(), ast.eval());
 }
