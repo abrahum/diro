@@ -6,3 +6,11 @@ dyadic_expr = { term ~ verb ~ expr }
 term = { int | ("(" | "（") ~ expr ~ (")" | "）") }
 verb = {"+" | "-" | "*" | "/" | "^" | "%" | ^"x"}
 int = @{ "-"? ~ ASCII_DIGIT+ }
+uint = @{ ASCII_DIGIT+ }
+
+dice = { extra* ~ uint? ~ ^"d" ~ uint? ~ extra* }
+b = @{ ^"b" ~ uint? }
+p = @{ ^"p" ~ uint? }
+k = @{ ^"k" ~ uint? }
+q = @{ ^"q" ~ uint? }
+extra = _{ b | p | k | q }

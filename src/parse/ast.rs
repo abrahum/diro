@@ -1,14 +1,15 @@
+use crate::Dice;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DiroAst {
     Int(i32),
-    Dice(crate::Dice),
+    Dice(Dice),
     DyadicOP {
         verb: Verb,
         lhs: Box<DiroAst>,
         rhs: Box<DiroAst>,
     },
     Closed(Box<DiroAst>),
-    Empty,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -33,9 +34,8 @@ impl DiroAst {
                 Verb::Modulo => lhs.eval() % rhs.eval(),
                 Verb::Power => lhs.eval().pow(rhs.eval() as u32),
             },
-            DiroAst::Dice(dice) => dice.roll_and_get(),
+            DiroAst::Dice(dice) => dice.roll().result(),
             DiroAst::Closed(ast) => ast.eval(),
-            DiroAst::Empty => 0,
         }
     }
 
@@ -47,7 +47,6 @@ impl DiroAst {
             }
             DiroAst::Dice(dice) => dice.expr(),
             DiroAst::Closed(ast) => ast.expr(),
-            DiroAst::Empty => "".to_string(),
         }
     }
 

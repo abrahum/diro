@@ -20,7 +20,7 @@ pub fn parse(source: &str) -> DiroResult<DiroAst> {
             _ => {}
         }
     }
-    Ok(DiroAst::Empty)
+    Ok(DiroAst::Dice(crate::Dice::default()))
 }
 
 fn parse_expr(pair: Pair<Rule>) -> DiroResult<DiroAst> {
@@ -69,7 +69,7 @@ fn parse_dyadic_expr(pair: Pair<Rule>) -> DiroResult<DiroAst> {
 
 #[test]
 fn parse_test() {
-    let source = "-11 + 2 / (2 + 2 - 1)";
+    let source = "-11 + 2 * (2 + 2 - 1) ^ 3";
     let mut ast = parse(source).unwrap();
     println!("{} = {}", ast.expr(), ast.eval());
 }
