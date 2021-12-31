@@ -15,7 +15,7 @@ struct Diro(diro::DiroAst);
 impl Diro {
     #[new]
     fn new() -> Self {
-        Self(diro::DiroAst::Dice(diro::Dice::default()))
+        Self(diro::DiroAst::Dice(diro::Dice::default(), None))
     }
 
     fn __repr__(&self) -> PyResult<String> {

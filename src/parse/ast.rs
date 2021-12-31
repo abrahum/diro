@@ -2,13 +2,13 @@ use std::fmt::Display;
 
 use crate::{
     error::{DiroError, DiroResult},
-    Dice,
+    Dice, RollResult,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DiroAst {
     Int(i32),
-    Dice(Dice),
+    Dice(Dice, Option<RollResult>),
     DyadicOP {
         verb: Verb,
         lhs: Box<DiroAst>,
@@ -45,8 +45,20 @@ impl DiroAst {
                 Verb::Modulo => Ok(lhs.eval()? % rhs.eval()?),
                 Verb::Power => Ok(lhs.eval()?.pow(rhs.eval()? as u32)),
             },
-            DiroAst::Dice(dice) => dice.roll().result(),
+            DiroAst::Dice(dice, ..) => dice.roll().result(),
             DiroAst::Closed(ast) => Ok(ast.eval()?),
+        }
+    }
+
+    pub fn roll(&mut self) {
+        match self {
+            DiroAst::Dice(dice, result) => *result = Some(dice.roll()),
+            DiroAst::Closed(ast) => ast.roll(),
+            DiroAst::DyadicOP { lhs, rhs, .. } => {
+                lhs.roll();
+                rhs.roll();
+            }
+            _ => {}
         }
     }
 
@@ -63,7 +75,7 @@ impl DiroAst {
                 verb,
                 rhs.expr_with_verb(verb)
             ),
-            DiroAst::Dice(dice) => dice.expr(),
+            DiroAst::Dice(dice, ..) => dice.expr(),
             DiroAst::Closed(ast) => {
                 if let Self::DyadicOP { verb, .. } = ast.as_ref() {
                     if verb.priority() < s_verb.priority() {
@@ -84,7 +96,7 @@ impl DiroAst {
             DiroAst::DyadicOP { verb, lhs, rhs } => {
                 format!("({} {} {})", verb, lhs.s_expr(), rhs.s_expr())
             }
-            DiroAst::Dice(dice) => dice.expr(),
+            DiroAst::Dice(dice, ..) => dice.expr(),
             DiroAst::Closed(ast) => ast.s_expr(),
         }
     }

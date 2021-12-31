@@ -8,7 +8,7 @@ pub enum Dice {
     Other { face: u16, count: u8, kq: i8 },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RollResult {
     D100 {
         bp: bool,

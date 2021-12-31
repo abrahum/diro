@@ -20,7 +20,7 @@ pub fn parse(source: &str) -> DiroResult<DiroAst> {
             _ => {}
         }
     }
-    Ok(DiroAst::Dice(crate::Dice::default()))
+    Ok(DiroAst::Dice(crate::Dice::default(), None))
 }
 
 fn parse_expr(pair: Pair<Rule>) -> DiroResult<DiroAst> {
@@ -85,9 +85,9 @@ fn parse_dice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
         }
     }
     if count == 1 && face == 100 {
-        Ok(DiroAst::Dice(crate::Dice::D100(bp)))
+        Ok(DiroAst::Dice(crate::Dice::D100(bp), None))
     } else {
-        Ok(DiroAst::Dice(crate::Dice::Other { face, count, kq }))
+        Ok(DiroAst::Dice(crate::Dice::Other { face, count, kq }, None))
     }
 }
 
