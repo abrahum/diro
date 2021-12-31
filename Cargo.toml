@@ -10,3 +10,8 @@ pest = "2.1"
 pest_derive = "2.1"
 thiserror = "1.0"
 rand = "0.8"
+
+[workspace]
+members = [
+    "diro_py",
+]

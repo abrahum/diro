@@ -1,16 +1,17 @@
 WHITESPACE = _{ " " }
-main = _{SOI ~ stmt? ~ EOI }
-stmt = _{ expr }
+main = _{SOI ~ expr? ~ EOI }
 expr = { dyadic_expr | term }
 dyadic_expr = { term ~ verb ~ expr }
-term = { int | ("(" | "（") ~ expr ~ (")" | "）") }
-verb = {"+" | "-" | "*" | "/" | "^" | "%" | ^"x"}
+term = { dice | int | ("(" | "（") ~ expr ~ (")" | "）") }
+verb = { "+" | "-" | "*" | "/" | "^" | "%" | ^"x" }
 int = @{ "-"? ~ ASCII_DIGIT+ }
 uint = @{ ASCII_DIGIT+ }
 
-dice = { extra* ~ uint? ~ ^"d" ~ uint? ~ extra* }
-b = @{ ^"b" ~ uint? }
-p = @{ ^"p" ~ uint? }
-k = @{ ^"k" ~ uint? }
-q = @{ ^"q" ~ uint? }
+dice = { extra* ~ base_dice ~ extra* }
+base_dice = ${ uint? ~ d ~ uint? }
+d = { ^"d" }
+b = ${ ^"b" ~ uint? }
+p = ${ ^"p" ~ uint? }
+k = ${ ^"k" ~ uint? }
+q = ${ ^"q" ~ uint? }
 extra = _{ b | p | k | q }

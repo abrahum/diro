@@ -7,8 +7,10 @@ pub type DiroResult<T> = Result<T, DiroError>;
 pub enum DiroError {
     #[error("Pest Error: {0}")]
     PestError(#[from] pest::error::Error<Rule>),
-    #[error("Unknown Verb: {0}")]
-    UnknownVerb(String),
     #[error("IntParseError: {0}")]
     IntParseError(#[from] std::num::ParseIntError),
+    #[error("Invalid Result: {0}")]
+    InvalidResult(String),
+    #[error("KQ can't be bigger than the number of dice")]
+    KQTooBig,
 }
