@@ -11,6 +11,8 @@ pub enum DiroError {
     IntParseError(#[from] std::num::ParseIntError),
     #[error("Invalid Result: {0}")]
     InvalidResult(String),
-    #[error("KQ can't be bigger than the number of dice")]
+    #[error("KQ number can't be bigger the amount of dice")]
     KQTooBig,
+    #[error("Dice should roll before calulate")]
+    DiceNotRolled,
 }

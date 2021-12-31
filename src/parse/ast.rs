@@ -29,25 +29,8 @@ pub enum Verb {
 
 impl DiroAst {
     pub fn eval(&mut self) -> DiroResult<i32> {
-        match self {
-            DiroAst::Int(i) => Ok(*i),
-            DiroAst::DyadicOP { verb, lhs, rhs } => match verb {
-                Verb::Plus => Ok(lhs.eval()? + rhs.eval()?),
-                Verb::Minus => Ok(lhs.eval()? - rhs.eval()?),
-                Verb::Times => Ok(lhs.eval()? * rhs.eval()?),
-                Verb::Divide => {
-                    let r = rhs.eval()?;
-                    if r == 0 {
-                        return Err(DiroError::InvalidResult("Division by zero".to_owned()));
-                    }
-                    Ok(lhs.eval()? / r)
-                }
-                Verb::Modulo => Ok(lhs.eval()? % rhs.eval()?),
-                Verb::Power => Ok(lhs.eval()?.pow(rhs.eval()? as u32)),
-            },
-            DiroAst::Dice(dice, ..) => dice.roll().result(),
-            DiroAst::Closed(ast) => Ok(ast.eval()?),
-        }
+        self.roll();
+        self.calulate()
     }
 
     pub fn roll(&mut self) {
@@ -62,26 +45,54 @@ impl DiroAst {
         }
     }
 
-    pub fn expr(&self) -> String {
-        self.expr_with_verb(&Verb::Plus)
+    pub fn calulate(&self) -> DiroResult<i32> {
+        match self {
+            DiroAst::Int(i) => Ok(*i),
+            DiroAst::DyadicOP { verb, lhs, rhs } => match verb {
+                Verb::Plus => Ok(lhs.calulate()? + rhs.calulate()?),
+                Verb::Minus => Ok(lhs.calulate()? - rhs.calulate()?),
+                Verb::Times => Ok(lhs.calulate()? * rhs.calulate()?),
+                Verb::Divide => {
+                    let r = rhs.calulate()?;
+                    if r == 0 {
+                        return Err(DiroError::InvalidResult("Division by zero".to_owned()));
+                    }
+                    Ok(lhs.calulate()? / r)
+                }
+                Verb::Modulo => Ok(lhs.calulate()? % rhs.calulate()?),
+                Verb::Power => Ok(lhs.calulate()?.pow(rhs.calulate()? as u32)),
+            },
+            DiroAst::Dice(_, result) => {
+                if let Some(r) = result {
+                    Ok(r.result())
+                } else {
+                    Err(DiroError::DiceNotRolled)
+                }
+            }
+            DiroAst::Closed(ast) => Ok(ast.calulate()?),
+        }
     }
 
-    fn expr_with_verb(&self, s_verb: &Verb) -> String {
+    pub fn expr(&self) -> String {
+        self.expr_with_priority(1)
+    }
+
+    fn expr_with_priority(&self, priority: u8) -> String {
         match self {
             DiroAst::Int(i) => i.to_string(),
             DiroAst::DyadicOP { verb, lhs, rhs } => format!(
                 "{}{}{}",
-                lhs.expr_with_verb(verb),
+                lhs.expr_with_priority(verb.priority()),
                 verb,
-                rhs.expr_with_verb(verb)
+                rhs.expr_with_priority(verb.priority())
             ),
             DiroAst::Dice(dice, ..) => dice.expr(),
             DiroAst::Closed(ast) => {
                 if let Self::DyadicOP { verb, .. } = ast.as_ref() {
-                    if verb.priority() < s_verb.priority() {
-                        format!("({})", ast.expr_with_verb(s_verb))
+                    if verb.priority() < priority {
+                        format!("({})", ast.expr_with_priority(priority))
                     } else {
-                        ast.expr_with_verb(s_verb)
+                        ast.expr_with_priority(priority)
                     }
                 } else {
                     ast.expr()

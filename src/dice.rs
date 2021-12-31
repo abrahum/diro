@@ -1,4 +1,3 @@
-use crate::error::{DiroError, DiroResult};
 use rand::Rng;
 use std::fmt::Debug;
 
@@ -22,7 +21,7 @@ pub enum RollResult {
 }
 
 impl RollResult {
-    pub fn result(&self) -> DiroResult<i32> {
+    pub fn result(&self) -> i32 {
         match self {
             Self::D100 {
                 result,
@@ -44,28 +43,22 @@ impl RollResult {
                     }
                 }
                 if high == 0 && *low == 0 {
-                    Ok(100)
+                    100
                 } else {
-                    Ok((high * 10 + low) as i32)
+                    (high * 10 + low) as i32
                 }
             }
             Self::Other { kq, result } => match kq {
-                0 => Ok(result.iter().sum()),
+                0 => result.iter().sum(),
                 1..=i8::MAX => {
-                    if result.len() < *kq as usize {
-                        return Err(DiroError::KQTooBig);
-                    }
                     let mut temp = result.clone();
                     temp.sort_unstable();
-                    Ok(temp.iter().rev().take(*kq as usize).sum())
+                    temp.iter().rev().take(*kq as usize).sum()
                 }
                 i8::MIN..=-1 => {
-                    if result.len() < kq.abs() as usize {
-                        return Err(DiroError::KQTooBig);
-                    }
                     let mut temp = result.clone();
                     temp.sort_unstable();
-                    Ok(temp.iter().take(kq.abs() as usize).sum())
+                    temp.iter().take(kq.abs() as usize).sum()
                 }
             },
         }
@@ -79,6 +72,14 @@ impl Default for Dice {
 }
 
 impl Dice {
+    pub fn new(count: u8, face: u16, bp: i8, kq: i8) -> Self {
+        if count == 1 && face == 100 {
+            Dice::D100(bp)
+        } else {
+            Dice::Other { face, count, kq }
+        }
+    }
+
     pub fn roll(&mut self) -> RollResult {
         fn range_9(rng: &mut impl Rng) -> u8 {
             rng.gen_range(0..9)

@@ -1,7 +1,7 @@
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 
-use crate::error::DiroResult;
+use crate::error::{DiroError, DiroResult};
 
 mod ast;
 pub use ast::*;
@@ -84,11 +84,10 @@ fn parse_dice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
             _ => unreachable!(),
         }
     }
-    if count == 1 && face == 100 {
-        Ok(DiroAst::Dice(crate::Dice::D100(bp), None))
-    } else {
-        Ok(DiroAst::Dice(crate::Dice::Other { face, count, kq }, None))
+    if kq.abs() > count as i8 {
+        return Err(DiroError::KQTooBig);
     }
+    Ok(DiroAst::Dice(crate::Dice::new(count, face, bp, kq), None))
 }
 
 fn parse_base_dice(pair: Pair<Rule>, count: &mut u8, face: &mut u16) -> DiroResult<()> {
@@ -137,7 +136,9 @@ fn parse_test() {
 
 #[test]
 fn parse_dice_test() {
-    let source = "d2k1";
-    let mut ast = parse(source).unwrap();
-    println!("{} = {:?}", ast.expr(), ast.eval());
+    let source = "k2d6";
+    match parse(source) {
+        Ok(mut ast) => println!("{} = {:?}", ast.expr(), ast.eval()),
+        Err(e) => println!("{}", e),
+    }
 }

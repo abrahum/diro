@@ -15,3 +15,8 @@ p = ${ ^"p" ~ uint? }
 k = ${ ^"k" ~ uint? }
 q = ${ ^"q" ~ uint? }
 extra = _{ b | p | k | q }
+
+// todo
+adice = ${ uint ~ ^"a" ~ uint ~ (^"k" ~ uint)? ~ (^"m" ~ uint)? }
+cdice = ${ uint ~ ^"c" ~ uint ~ (^"m" ~ uint)? }
+fdice = ${ uint ~ ^"f" }
