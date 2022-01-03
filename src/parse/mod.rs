@@ -1,7 +1,7 @@
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 
-use crate::error::{DiroError, DiroResult};
+use crate::error::DiroResult;
 
 mod ast;
 pub use ast::*;
@@ -84,10 +84,7 @@ fn parse_dice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
             _ => unreachable!(),
         }
     }
-    if kq.abs() > count as i8 {
-        return Err(DiroError::KQTooBig);
-    }
-    Ok(DiroAst::Dice(crate::Dice::new(count, face, bp, kq), None))
+    Ok(DiroAst::Dice(crate::Dice::new(count, face, bp, kq)?, None))
 }
 
 fn parse_base_dice(pair: Pair<Rule>, count: &mut u8, face: &mut u16) -> DiroResult<()> {
@@ -130,15 +127,28 @@ fn parse_bp(pair: Pair<Rule>, bp: &mut i8, b: bool) -> DiroResult<()> {
 fn parse_test() {
     let source = "-11 + 2 x ((2 + 2) - 1) / 3";
     let mut ast = parse(source).unwrap();
-    println!("{} = {:?}", ast.s_expr(), ast.eval());
+    println!(
+        "{} = {} = {:?}",
+        ast.s_expr(),
+        ast.detail_expr().unwrap(),
+        ast.eval()
+    );
     println!("{} = {:?}", ast.expr(), ast.eval());
 }
 
 #[test]
 fn parse_dice_test() {
-    let source = "k2d6";
+    let source = "3d6+1";
     match parse(source) {
-        Ok(mut ast) => println!("{} = {:?}", ast.expr(), ast.eval()),
+        Ok(mut ast) => {
+            ast.roll();
+            println!(
+                "{} = {} = {:?}",
+                ast.expr(),
+                ast.detail_expr().unwrap(),
+                ast.calc()
+            )
+        }
         Err(e) => println!("{}", e),
     }
 }

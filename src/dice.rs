@@ -1,6 +1,8 @@
 use rand::Rng;
 use std::fmt::Debug;
 
+use crate::error::{DiroError, DiroResult};
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Dice {
     D100(i8),
@@ -21,6 +23,40 @@ pub enum RollResult {
 }
 
 impl RollResult {
+    pub fn detail(&self) -> String {
+        match self {
+            RollResult::D100 {
+                bp,
+                result,
+                bp_result,
+            } => {
+                let mut s = String::new();
+                s.push_str(result[0].to_string().as_str());
+                s.push(' ');
+                s.push_str(result[1].to_string().as_str());
+                if *bp {
+                    s.push_str(" B ");
+                } else if !bp_result.is_empty() {
+                    s.push_str(" P ");
+                }
+                s.push_str(
+                    bp_result
+                        .iter()
+                        .map(|x| x.to_string())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                        .as_str(),
+                );
+                s
+            }
+            RollResult::Other { result, .. } => result
+                .iter()
+                .map(|r| r.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
+        }
+    }
+
     pub fn result(&self) -> i32 {
         match self {
             Self::D100 {
@@ -72,11 +108,15 @@ impl Default for Dice {
 }
 
 impl Dice {
-    pub fn new(count: u8, face: u16, bp: i8, kq: i8) -> Self {
+    pub fn new(count: u8, face: u16, bp: i8, kq: i8) -> DiroResult<Self> {
         if count == 1 && face == 100 {
-            Dice::D100(bp)
+            Ok(Dice::D100(bp))
         } else {
-            Dice::Other { face, count, kq }
+            if kq.abs() as u8 <= count {
+                Ok(Dice::Other { face, count, kq })
+            } else {
+                Err(DiroError::KQTooBig)
+            }
         }
     }
 
@@ -141,7 +181,7 @@ impl Dice {
 #[test]
 fn dice_test() {
     let mut dices = [
-        Dice::D100(5),
+        Dice::D100(0),
         Dice::Other {
             face: 6,
             count: 4,
@@ -150,7 +190,7 @@ fn dice_test() {
     ];
     for dice in dices.iter_mut() {
         let r = dice.roll();
-        println!("{}={:?}", dice.expr(), r.result());
+        println!("{}={}={:?}", dice.expr(), r.detail(), r.result());
         println!("{:?}", r);
     }
 }

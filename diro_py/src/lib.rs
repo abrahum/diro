@@ -1,4 +1,5 @@
-use pyo3::exceptions::PyValueError;
+use diro::DiroError;
+use pyo3::exceptions::{PyValueError, PyZeroDivisionError};
 use pyo3::prelude::*;
 
 mod dice;
@@ -15,6 +16,27 @@ impl Diro {
     fn eval(&mut self) -> PyResult<i32> {
         self.0
             .eval()
+            .map_err(|e| PyValueError::new_err(e.to_string()))
+    }
+
+    fn roll(&mut self) {
+        self.0.roll();
+    }
+
+    fn calc(&self) -> PyResult<i32> {
+        self.0.calc().map_err(|e| match e {
+            DiroError::ZeroDivision => PyZeroDivisionError::new_err(e.to_string()),
+            _ => PyValueError::new_err(e.to_string()),
+        })
+    }
+
+    fn expr(&self) -> String {
+        self.0.expr()
+    }
+
+    fn detail_expr(&self) -> PyResult<String> {
+        self.0
+            .detail_expr()
             .map_err(|e| PyValueError::new_err(e.to_string()))
     }
 }

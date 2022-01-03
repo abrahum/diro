@@ -30,7 +30,7 @@ pub enum Verb {
 impl DiroAst {
     pub fn eval(&mut self) -> DiroResult<i32> {
         self.roll();
-        self.calulate()
+        self.calc()
     }
 
     pub fn roll(&mut self) {
@@ -45,22 +45,22 @@ impl DiroAst {
         }
     }
 
-    pub fn calulate(&self) -> DiroResult<i32> {
+    pub fn calc(&self) -> DiroResult<i32> {
         match self {
             DiroAst::Int(i) => Ok(*i),
             DiroAst::DyadicOP { verb, lhs, rhs } => match verb {
-                Verb::Plus => Ok(lhs.calulate()? + rhs.calulate()?),
-                Verb::Minus => Ok(lhs.calulate()? - rhs.calulate()?),
-                Verb::Times => Ok(lhs.calulate()? * rhs.calulate()?),
+                Verb::Plus => Ok(lhs.calc()? + rhs.calc()?),
+                Verb::Minus => Ok(lhs.calc()? - rhs.calc()?),
+                Verb::Times => Ok(lhs.calc()? * rhs.calc()?),
                 Verb::Divide => {
-                    let r = rhs.calulate()?;
+                    let r = rhs.calc()?;
                     if r == 0 {
-                        return Err(DiroError::InvalidResult("Division by zero".to_owned()));
+                        return Err(DiroError::ZeroDivision);
                     }
-                    Ok(lhs.calulate()? / r)
+                    Ok(lhs.calc()? / r)
                 }
-                Verb::Modulo => Ok(lhs.calulate()? % rhs.calulate()?),
-                Verb::Power => Ok(lhs.calulate()?.pow(rhs.calulate()? as u32)),
+                Verb::Modulo => Ok(lhs.calc()? % rhs.calc()?),
+                Verb::Power => Ok(lhs.calc()?.pow(rhs.calc()? as u32)),
             },
             DiroAst::Dice(_, result) => {
                 if let Some(r) = result {
@@ -69,33 +69,56 @@ impl DiroAst {
                     Err(DiroError::DiceNotRolled)
                 }
             }
-            DiroAst::Closed(ast) => Ok(ast.calulate()?),
+            DiroAst::Closed(ast) => Ok(ast.calc()?),
         }
     }
 
     pub fn expr(&self) -> String {
-        self.expr_with_priority(1)
+        self.expr_with_priority(1, None).unwrap()
     }
 
-    fn expr_with_priority(&self, priority: u8) -> String {
+    pub fn detail_expr(&self) -> DiroResult<String> {
+        self.expr_with_priority(1, Some(true))
+    }
+
+    fn expr_with_priority(&self, priority: u8, root: Option<bool>) -> DiroResult<String> {
         match self {
-            DiroAst::Int(i) => i.to_string(),
-            DiroAst::DyadicOP { verb, lhs, rhs } => format!(
+            DiroAst::Int(i) => Ok(i.to_string()),
+            DiroAst::DyadicOP { verb, lhs, rhs } => Ok(format!(
                 "{}{}{}",
-                lhs.expr_with_priority(verb.priority()),
+                lhs.expr_with_priority(verb.priority(), root.and_then(|_| { Some(false) }))?,
                 verb,
-                rhs.expr_with_priority(verb.priority())
-            ),
-            DiroAst::Dice(dice, ..) => dice.expr(),
+                rhs.expr_with_priority(verb.priority(), root.and_then(|_| { Some(false) }))?
+            )),
+            DiroAst::Dice(dice, result) => {
+                if let Some(root) = root {
+                    if root {
+                        result
+                            .as_ref()
+                            .and_then(|r| Some(r.detail()))
+                            .ok_or_else(|| DiroError::DiceNotRolled)
+                    } else {
+                        result
+                            .as_ref()
+                            .and_then(|r| Some(r.result().to_string()))
+                            .ok_or_else(|| DiroError::DiceNotRolled)
+                    }
+                } else {
+                    Ok(dice.expr())
+                }
+            }
             DiroAst::Closed(ast) => {
                 if let Self::DyadicOP { verb, .. } = ast.as_ref() {
                     if verb.priority() < priority {
-                        format!("({})", ast.expr_with_priority(priority))
+                        Ok(format!(
+                            "({})",
+                            ast.expr_with_priority(priority, root.and_then(|_| { Some(false) }))?
+                        ))
                     } else {
-                        ast.expr_with_priority(priority)
+                        Ok(ast.expr_with_priority(priority, root.and_then(|_| Some(false)))?)
                     }
                 } else {
-                    ast.expr()
+                    Ok(ast.expr_with_priority(priority, root.and_then(|_| Some(false)))?)
                 }
             }
         }

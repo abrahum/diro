@@ -9,9 +9,9 @@ pub enum DiroError {
     PestError(#[from] pest::error::Error<Rule>),
     #[error("IntParseError: {0}")]
     IntParseError(#[from] std::num::ParseIntError),
-    #[error("Invalid Result: {0}")]
-    InvalidResult(String),
-    #[error("KQ number can't be bigger the amount of dice")]
+    #[error("division by zero")]
+    ZeroDivision,
+    #[error("KQ number can't be bigger than the amount of dices")]
     KQTooBig,
     #[error("Dice should roll before calulate")]
     DiceNotRolled,
