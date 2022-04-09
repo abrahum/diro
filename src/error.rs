@@ -13,6 +13,8 @@ pub enum DiroError {
     ZeroDivision,
     #[error("KQ number can't be bigger than the amount of dices")]
     KQTooBig,
+    #[error("At least one dice must be present")]
+    NoDice,
     #[error("Dice should roll before calulate")]
     DiceNotRolled,
 }

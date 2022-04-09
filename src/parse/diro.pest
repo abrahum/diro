@@ -2,21 +2,25 @@ WHITESPACE = _{ " " }
 main = _{SOI ~ expr? ~ EOI }
 expr = { dyadic_expr | term }
 dyadic_expr = { term ~ verb ~ expr }
-term = { dice | int | ("(" | "（") ~ expr ~ (")" | "）") }
+term = { dice | adice | cdice | fdice | int | ("(" | "（") ~ expr ~ (")" | "）") }
 verb = { "+" | "-" | "*" | "/" | "^" | "%" | ^"x" }
 int = @{ "-"? ~ ASCII_DIGIT+ }
 uint = @{ ASCII_DIGIT+ }
 
-dice = { extra* ~ base_dice ~ extra* }
+dice = { base_dice ~ extra* ~ a? }
 base_dice = ${ uint? ~ d ~ uint? }
 d = { ^"d" }
 b = ${ ^"b" ~ uint? }
 p = ${ ^"p" ~ uint? }
 k = ${ ^"k" ~ uint? }
 q = ${ ^"q" ~ uint? }
+a = ${ ^"a" ~ uint }
 extra = _{ b | p | k | q }
 
 // todo
-adice = ${ uint ~ ^"a" ~ uint ~ (^"k" ~ uint)? ~ (^"m" ~ uint)? }
-cdice = ${ uint ~ ^"c" ~ uint ~ (^"m" ~ uint)? }
+m = ${ ^"m" ~ uint? }
+ad = { ^"a" }
+adice = ${ uint ~ ad ~ uint ~ k? ~ m? }
+c = { ^"c" }
+cdice = ${ uint ~ c ~ uint ~ m? }
 fdice = ${ uint ~ ^"f" }

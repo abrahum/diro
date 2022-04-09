@@ -67,14 +67,14 @@ class RollResult:
         get detail of the result
         '''
 
-    def result(self) -> Tuple[List[int], List[int], int]:
-        '''
-        get inner of the result
-        if it's a D100 dice, the result is:
-            [D100_results, bp_results, bp_number]
-        else if it's not, the result is:
-            [dice_results, none, kq_number]
-        '''
+    # def result(self) -> Tuple[List[int], List[int], int]:
+    #     '''
+    #     get inner of the result
+    #     if it's a D100 dice, the result is:
+    #         [D100_results, bp_results, bp_number]
+    #     else if it's not, the result is:
+    #         [dice_results, none, kq_number]
+    #     '''
 
 
 def parse(source: str) -> Diro:

@@ -1,7 +1,7 @@
 use pest::{iterators::Pair, Parser};
 use pest_derive::Parser;
 
-use crate::error::DiroResult;
+use crate::{error::DiroResult, Dice};
 
 mod ast;
 pub use ast::*;
@@ -50,6 +50,9 @@ fn parse_term(pair: Pair<Rule>) -> DiroResult<DiroAst> {
     let pair = pair.into_inner().next().unwrap();
     match pair.as_rule() {
         Rule::dice => parse_dice(pair),
+        Rule::adice => parse_adice(pair),
+        Rule::cdice => parse_cdice(pair),
+        Rule::fdice => parse_fdice(pair),
         Rule::expr => parse_expr(pair).map(|a| DiroAst::Closed(Box::new(a))),
         Rule::int => Ok(DiroAst::Int(pair.as_str().parse()?)),
         _ => unreachable!(),
@@ -74,6 +77,7 @@ fn parse_dice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
     let mut kq = 0;
     let mut count = 1;
     let mut face = 100;
+    let mut a = 0;
     for pair in pairs {
         match pair.as_rule() {
             Rule::base_dice => parse_base_dice(pair, &mut count, &mut face)?,
@@ -81,10 +85,14 @@ fn parse_dice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
             Rule::p => parse_bp(pair, &mut bp, false)?,
             Rule::k => parse_bp(pair, &mut kq, true)?,
             Rule::q => parse_bp(pair, &mut kq, false)?,
+            Rule::a => parse_a(pair, &mut a)?,
             _ => unreachable!(),
         }
     }
-    Ok(DiroAst::Dice(crate::Dice::new(count, face, bp, kq)?, None))
+    Ok(DiroAst::Dice(
+        crate::Dice::_dice(count, face, bp, kq, a)?,
+        None,
+    ))
 }
 
 fn parse_base_dice(pair: Pair<Rule>, count: &mut u8, face: &mut u16) -> DiroResult<()> {
@@ -121,6 +129,88 @@ fn parse_bp(pair: Pair<Rule>, bp: &mut i8, b: bool) -> DiroResult<()> {
         }
     }
     Ok(())
+}
+
+fn parse_a(pair: Pair<Rule>, a: &mut u16) -> DiroResult<()> {
+    if let Some(pair) = pair.into_inner().next() {
+        *a = pair.as_str().parse()?;
+    }
+    Ok(())
+}
+
+fn parse_adice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
+    let pairs = pair.into_inner();
+    let mut count = 1;
+    let mut face = 10;
+    let mut add_line = 11;
+    let mut success_line = 8;
+    let mut a = false;
+    for pair in pairs {
+        match pair.as_rule() {
+            Rule::ad => a = true,
+            Rule::uint => {
+                if a {
+                    add_line = pair.as_str().parse()?;
+                } else {
+                    count = pair.as_str().parse()?;
+                }
+            }
+            Rule::k => parse_a(pair, &mut success_line)?,
+            Rule::m => parse_a(pair, &mut face)?,
+            _ => unreachable!(),
+        }
+    }
+    Ok(DiroAst::Dice(
+        Dice::ADice {
+            count,
+            face,
+            add_line,
+            success_line,
+        },
+        None,
+    ))
+}
+
+fn parse_cdice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
+    let pairs = pair.into_inner();
+    let mut count = 1;
+    let mut face = 10;
+    let mut count_line = 11;
+    let mut c = false;
+    for pair in pairs {
+        match pair.as_rule() {
+            Rule::c => c = true,
+            Rule::uint => {
+                if c {
+                    count_line = pair.as_str().parse()?;
+                } else {
+                    count = pair.as_str().parse()?;
+                }
+            }
+            Rule::m => parse_a(pair, &mut face)?,
+            _ => unreachable!(),
+        }
+    }
+    Ok(DiroAst::Dice(
+        Dice::CDice {
+            count,
+            face,
+            count_line,
+        },
+        None,
+    ))
+}
+
+fn parse_fdice(pair: Pair<Rule>) -> DiroResult<DiroAst> {
+    let pairs = pair.into_inner();
+    let mut count = 1;
+    for pair in pairs {
+        match pair.as_rule() {
+            Rule::uint => count = pair.as_str().parse()?,
+            _ => unreachable!(),
+        }
+    }
+    Ok(DiroAst::Dice(Dice::FDice(count), None))
 }
 
 #[test]
