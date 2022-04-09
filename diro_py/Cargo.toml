@@ -1,14 +1,17 @@
 [package]
-name = "diro_py"
-version = "0.1.0"
+name = "diro-py"
+version = "0.1.1"
+authors = ["abrahumlink"]
+description = "A Dice expression parser"
+license = "MIT"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "diropy"
+name = "diro"
 crate-type = ["cdylib"]
 
 [dependencies]
 diro = { path = "../" }
-pyo3 = { version = "0.15", features = ["extension-module"] }
+pyo3 = { version = "0.16", features = ["extension-module"] }

@@ -42,7 +42,7 @@ impl Diro {
 }
 
 #[pymodule]
-#[pyo3(name = "diropy")]
+#[pyo3(name = "diro")]
 fn diro_py(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Diro>()?;
     m.add_class::<dice::Dice>()?;
